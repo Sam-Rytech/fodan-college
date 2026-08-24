@@ -12,8 +12,8 @@ export function PostForm({ categoryId, categorySlug }: { categoryId: string; cat
   const [state, action, pending] = useActionState(createPostAction, null);
 
   React.useEffect(() => {
-    if (state?.ok && state.value) {
-      router.push(`/forum/${state.value.categorySlug}/${state.value.postId}`);
+    if (state?.ok && state.data) {
+      router.push(`/forum/${state.data.categorySlug}/${state.data.postId}`);
     }
   }, [state, router]);
 
