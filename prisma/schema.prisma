@@ -1,0 +1,976 @@
+// =============================================================================
+// Fodan College LMS — Prisma schema
+//
+// Design notes
+// ------------
+// 1. Provider: PostgreSQL is the production target. `npm run db:use:sqlite`
+//    rewrites ONLY the `provider` line below so the same schema runs on SQLite
+//    for zero-install local development. To keep that possible the schema
+//    deliberately avoids: native enums, Json columns, array columns and
+//    `@db.*` native type attributes. Enumerated values are plain strings that
+//    are validated in one place (src/lib/constants.ts + Zod schemas).
+// 2. Every mutable table carries createdAt/updatedAt. Audit-relevant history
+//    lives in dedicated append-only tables (AuditLog, TaskHistory, LoginAttempt).
+// 3. Secrets (passwords, session tokens, activation codes, reset tokens) are
+//    NEVER stored in plaintext — only their hashes.
+// =============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// -----------------------------------------------------------------------------
+// Identity, roles & permissions
+// -----------------------------------------------------------------------------
+
+/// A role is a named bundle of default permissions. The domain has exactly one
+/// role per account (a person is a student OR an administrator), so User holds a
+/// single FK instead of a user_roles join table. Granularity is delivered by
+/// UserPermission overrides, which is strictly more expressive than multi-role.
+model Role {
+  id          String   @id @default(cuid())
+  key         String   @unique // STUDENT | MINI_ADMIN | SUPER_ADMIN
+  name        String
+  description String?
+  isSystem    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users       User[]
+  permissions RolePermission[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id          String   @id @default(cuid())
+  key         String   @unique // manage_students, manage_admins, ...
+  name        String
+  description String?
+  category    String   @default("general")
+  createdAt   DateTime @default(now())
+
+  roles RolePermission[]
+  users UserPermission[]
+
+  @@map("permissions")
+}
+
+model RolePermission {
+  id           String @id @default(cuid())
+  roleId       String
+  permissionId String
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+  @@index([roleId])
+  @@map("role_permissions")
+}
+
+/// Per-user override of the role default. `granted = false` is an explicit deny
+/// that beats the role grant, so the Super Admin can carve capabilities away
+/// from a single Mini Admin without inventing a new role.
+model UserPermission {
+  id           String   @id @default(cuid())
+  userId       String
+  permissionId String
+  granted      Boolean  @default(true)
+  grantedById  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user       User       @relation("UserPermissions", fields: [userId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  grantedBy  User?      @relation("PermissionGrantedBy", fields: [grantedById], references: [id], onDelete: SetNull)
+
+  @@unique([userId, permissionId])
+  @@index([userId])
+  @@map("user_permissions")
+}
+
+model User {
+  id                 String    @id @default(cuid())
+  username           String    @unique
+  email              String?   @unique
+  phone              String?   @unique
+  fullName           String
+  passwordHash       String
+  roleId             String
+  status             String    @default("ACTIVE") // ACTIVE | DISABLED
+  mustChangePassword Boolean   @default(false)
+  passwordChangedAt  DateTime?
+  emailVerifiedAt    DateTime?
+  phoneVerifiedAt    DateTime?
+  avatarUrl          String?
+
+  // Brute-force protection counters (reset on successful login)
+  failedLoginCount Int       @default(0)
+  lockedUntil      DateTime?
+  lastLoginAt      DateTime?
+  lastLoginIp      String?
+
+  // Forum moderation
+  forumSuspendedUntil DateTime?
+
+  createdById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  role      Role  @relation(fields: [roleId], references: [id])
+  createdBy User? @relation("UserCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  createdUsers       User[]               @relation("UserCreatedBy")
+  permissions        UserPermission[]     @relation("UserPermissions")
+  permissionsGranted UserPermission[]     @relation("PermissionGrantedBy")
+  studentProfile     StudentProfile?      @relation("StudentProfileUser")
+  activatedStudents  StudentProfile[]     @relation("StudentActivatedBy")
+  sessions           Session[]
+  loginAttempts      LoginAttempt[]
+  passwordResets     PasswordResetToken[] @relation("PasswordResetUser")
+  passwordResetsMade PasswordResetToken[] @relation("PasswordResetCreatedBy")
+  verifications      VerificationToken[]
+  notifications      Notification[]
+  auditLogs          AuditLog[]
+
+  classAssignments   AdminClassAssignment[]
+  subjectAssignments AdminSubjectAssignment[]
+
+  topicsCreated     Topic[]
+  materialsUploaded LearningMaterial[]
+  filesUploaded     StoredFile[]
+  lessonProgress    LessonProgress[]
+
+  accessCodesOwned   AccessCode[] @relation("AccessCodeStudent")
+  accessCodesCreated AccessCode[] @relation("AccessCodeCreatedBy")
+  accessCodesRevoked AccessCode[] @relation("AccessCodeRevokedBy")
+
+  examsCreated Examination[] @relation("ExamCreatedBy")
+  examImports  ExamImport[]
+  examAttempts ExamAttempt[]
+  results      Result[]
+
+  forumCategoriesCreated ForumCategory[]
+  forumPosts             ForumPost[]     @relation("ForumPostAuthor")
+  forumPostsModerated    ForumPost[]     @relation("ForumPostModerator")
+  forumReplies           ForumReply[]    @relation("ForumReplyAuthor")
+  forumRepliesModerated  ForumReply[]    @relation("ForumReplyModerator")
+  forumReportsMade       ForumReport[]   @relation("ForumReportReporter")
+  forumReportsReviewed   ForumReport[]   @relation("ForumReportReviewer")
+
+  tasksAssigned  Task[]        @relation("TaskAssignee")
+  tasksCreated   Task[]        @relation("TaskCreatedBy")
+  tasksCompleted Task[]        @relation("TaskCompletedBy")
+  taskHistory    TaskHistory[]
+
+  settingsUpdated SystemSetting[]
+
+  @@index([roleId])
+  @@index([status])
+  @@map("users")
+}
+
+model StudentProfile {
+  id              String    @id @default(cuid())
+  userId          String    @unique
+  classId         String?
+  studentType     String // PRIMARY | SECONDARY
+  admissionNumber String?   @unique
+  guardianName    String?
+  guardianPhone   String?
+  dateOfBirth     DateTime?
+  gender          String?
+
+  /// Registration alone grants no learning access. A student may browse their
+  /// dashboard but cannot open materials or exams until isActivated is true,
+  /// which only a redeemed access code (or a Super Admin override) can set.
+  isActivated   Boolean   @default(false)
+  activatedAt   DateTime?
+  activatedById String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user        User         @relation("StudentProfileUser", fields: [userId], references: [id], onDelete: Cascade)
+  schoolClass SchoolClass? @relation(fields: [classId], references: [id], onDelete: SetNull)
+  activatedBy User?        @relation("StudentActivatedBy", fields: [activatedById], references: [id], onDelete: SetNull)
+
+  @@index([classId])
+  @@index([isActivated])
+  @@map("students")
+}
+
+// -----------------------------------------------------------------------------
+// Sessions, tokens & login history
+// -----------------------------------------------------------------------------
+
+/// Server-side session store. The cookie carries a random 256-bit token; only
+/// its SHA-256 hash is persisted, so a database leak cannot be replayed.
+model Session {
+  id            String    @id @default(cuid())
+  tokenHash     String    @unique
+  userId        String
+  ipAddress     String?
+  userAgent     String?
+  createdAt     DateTime  @default(now())
+  lastSeenAt    DateTime  @default(now())
+  expiresAt     DateTime
+  revokedAt     DateTime?
+  revokedReason String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+model PasswordResetToken {
+  id          String    @id @default(cuid())
+  tokenHash   String    @unique
+  userId      String
+  createdById String? // set when an administrator initiated the reset
+  expiresAt   DateTime
+  usedAt      DateTime?
+  createdAt   DateTime  @default(now())
+
+  user      User  @relation("PasswordResetUser", fields: [userId], references: [id], onDelete: Cascade)
+  createdBy User? @relation("PasswordResetCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@map("password_reset_tokens")
+}
+
+model VerificationToken {
+  id        String    @id @default(cuid())
+  userId    String
+  channel   String // EMAIL | PHONE
+  target    String
+  tokenHash String
+  expiresAt DateTime
+  usedAt    DateTime?
+  attempts  Int       @default(0)
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, channel])
+  @@map("verification_tokens")
+}
+
+model LoginAttempt {
+  id         String   @id @default(cuid())
+  identifier String
+  userId     String?
+  success    Boolean
+  reason     String?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([identifier, createdAt])
+  @@index([ipAddress, createdAt])
+  @@index([userId])
+  @@map("login_attempts")
+}
+
+// -----------------------------------------------------------------------------
+// Academic structure
+// -----------------------------------------------------------------------------
+
+model SchoolClass {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  slug        String   @unique
+  level       String // PRIMARY | SECONDARY
+  orderIndex  Int      @default(0)
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  students        StudentProfile[]
+  subjects        ClassSubject[]
+  topics          Topic[]
+  materials       LearningMaterial[]
+  examinations    Examination[]
+  accessCodes     AccessCode[]
+  adminAssignees  AdminClassAssignment[]
+  forumCategories ForumCategory[]
+  results         Result[]
+
+  @@index([level, orderIndex])
+  @@map("classes")
+}
+
+model Subject {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  code        String   @unique
+  slug        String   @unique
+  description String?
+  colorKey    String   @default("blue")
+  iconKey     String   @default("book")
+  orderIndex  Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  classes        ClassSubject[]
+  topics         Topic[]
+  materials      LearningMaterial[]
+  examinations   Examination[]
+  accessCodes    AccessCode[]
+  adminAssignees AdminSubjectAssignment[]
+  results        Result[]
+
+  @@map("subjects")
+}
+
+model ClassSubject {
+  id        String   @id @default(cuid())
+  classId   String
+  subjectId String
+  createdAt DateTime @default(now())
+
+  schoolClass SchoolClass @relation(fields: [classId], references: [id], onDelete: Cascade)
+  subject     Subject     @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@unique([classId, subjectId])
+  @@index([subjectId])
+  @@map("class_subjects")
+}
+
+model AdminClassAssignment {
+  id        String   @id @default(cuid())
+  userId    String
+  classId   String
+  createdAt DateTime @default(now())
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  schoolClass SchoolClass @relation(fields: [classId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, classId])
+  @@map("admin_class_assignments")
+}
+
+model AdminSubjectAssignment {
+  id        String   @id @default(cuid())
+  userId    String
+  subjectId String
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, subjectId])
+  @@map("admin_subject_assignments")
+}
+
+model Topic {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String
+  description String?
+  subjectId   String
+  classId     String
+  orderIndex  Int      @default(0)
+  isPublished Boolean  @default(true)
+  createdById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  subject     Subject     @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  schoolClass SchoolClass @relation(fields: [classId], references: [id], onDelete: Cascade)
+  createdBy   User?       @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  materials LearningMaterial[]
+
+  @@unique([subjectId, classId, slug])
+  @@index([classId, subjectId, orderIndex])
+  @@map("topics")
+}
+
+// -----------------------------------------------------------------------------
+// Files & learning materials
+// -----------------------------------------------------------------------------
+
+/// Storage-agnostic file record. `storageKey` is a generated, non-guessable key
+/// (never the user's original filename) resolved by the storage driver — local
+/// disk outside the web root in development, S3-compatible object storage in
+/// production. Files are only ever served through an authorised route handler.
+model StoredFile {
+  id           String   @id @default(cuid())
+  storageKey   String   @unique
+  provider     String   @default("LOCAL") // LOCAL | S3
+  originalName String
+  mimeType     String
+  sizeBytes    Int
+  checksum     String?
+  uploadedById String?
+  createdAt    DateTime @default(now())
+
+  uploadedBy User? @relation(fields: [uploadedById], references: [id], onDelete: SetNull)
+
+  materialFor   LearningMaterial[] @relation("MaterialFile")
+  thumbnailFor  LearningMaterial[] @relation("MaterialThumbnail")
+  examSourceFor Examination[]      @relation("ExamSourceFile")
+  examImports   ExamImport[]
+
+  @@map("stored_files")
+}
+
+model LearningMaterial {
+  id          String  @id @default(cuid())
+  title       String
+  description String?
+  topicId     String
+  subjectId   String
+  classId     String
+  type        String // PDF | PPTX | DOCX | VIDEO | AUDIO
+  fileId      String
+  thumbnailId String?
+
+  status          String    @default("DRAFT") // DRAFT | PUBLISHED | ARCHIVED
+  publishedAt     DateTime?
+  durationSeconds Int?
+  orderIndex      Int       @default(0)
+  downloadable    Boolean   @default(true)
+  viewCount       Int       @default(0)
+
+  uploadedById String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  topic       Topic       @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  subject     Subject     @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  schoolClass SchoolClass @relation(fields: [classId], references: [id], onDelete: Cascade)
+  file        StoredFile  @relation("MaterialFile", fields: [fileId], references: [id])
+  thumbnail   StoredFile? @relation("MaterialThumbnail", fields: [thumbnailId], references: [id], onDelete: SetNull)
+  uploadedBy  User?       @relation(fields: [uploadedById], references: [id], onDelete: SetNull)
+
+  progress LessonProgress[]
+
+  @@index([classId, subjectId, status])
+  @@index([topicId, orderIndex])
+  @@map("learning_materials")
+}
+
+model LessonProgress {
+  id                  String    @id @default(cuid())
+  studentId           String
+  materialId          String
+  status              String    @default("IN_PROGRESS") // IN_PROGRESS | COMPLETED
+  progressPercent     Int       @default(0)
+  lastPositionSeconds Int       @default(0)
+  completedAt         DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+
+  student  User             @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  material LearningMaterial @relation(fields: [materialId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, materialId])
+  @@index([studentId, status])
+  @@map("lesson_progress")
+}
+
+// -----------------------------------------------------------------------------
+// Access codes (student activation)
+// -----------------------------------------------------------------------------
+
+/// Only the hash of the code is persisted. The plaintext is shown to the
+/// generating administrator exactly once, at creation time, and can never be
+/// recovered afterwards — it can only be regenerated (which revokes the old one).
+model AccessCode {
+  id         String @id @default(cuid())
+  codeHash   String @unique
+  codePrefix String // human-readable, non-secret leading segment e.g. "FDN-JS1"
+  codeLast4  String // last 4 characters, for support lookup only
+
+  studentId String // the code is bound to exactly one student account
+  classId   String?
+  subjectId String?
+
+  status   String @default("ACTIVE") // ACTIVE | USED | EXPIRED | REVOKED
+  maxUses  Int    @default(1)
+  useCount Int    @default(0)
+
+  expiresAt    DateTime
+  activatedAt  DateTime?
+  revokedAt    DateTime?
+  revokedById  String?
+  revokeReason String?
+  note         String?
+
+  createdById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  student     User         @relation("AccessCodeStudent", fields: [studentId], references: [id], onDelete: Cascade)
+  schoolClass SchoolClass? @relation(fields: [classId], references: [id], onDelete: SetNull)
+  subject     Subject?     @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  createdBy   User?        @relation("AccessCodeCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  revokedBy   User?        @relation("AccessCodeRevokedBy", fields: [revokedById], references: [id], onDelete: SetNull)
+
+  @@index([studentId])
+  @@index([status, expiresAt])
+  @@map("access_codes")
+}
+
+// -----------------------------------------------------------------------------
+// Examinations
+// -----------------------------------------------------------------------------
+
+model Examination {
+  id             String  @id @default(cuid())
+  title          String
+  subjectId      String
+  classId        String
+  instructions   String?
+  durationMins   Int     @default(30)
+  totalQuestions Int     @default(0)
+  totalMarks     Int     @default(0)
+  passMark       Int     @default(40) // percentage
+  attemptLimit   Int     @default(1)
+
+  availableFrom DateTime?
+  availableTo   DateTime?
+
+  status      String    @default("DRAFT") // DRAFT | PUBLISHED | CLOSED
+  publishedAt DateTime?
+  closedAt    DateTime?
+
+  shuffleQuestions    Boolean @default(true)
+  shuffleOptions      Boolean @default(false)
+  showResultInstantly Boolean @default(true)
+  /// Whether students may review the correct answers after submitting.
+  /// Defaults to false; the Super Admin controls this per exam and globally.
+  showCorrectAnswers  Boolean @default(false)
+
+  sourceFileId String?
+  createdById  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  subject     Subject     @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  schoolClass SchoolClass @relation(fields: [classId], references: [id], onDelete: Cascade)
+  sourceFile  StoredFile? @relation("ExamSourceFile", fields: [sourceFileId], references: [id], onDelete: SetNull)
+  createdBy   User?       @relation("ExamCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  questions ExamQuestion[]
+  attempts  ExamAttempt[]
+  results   Result[]
+  imports   ExamImport[]
+
+  @@index([classId, subjectId, status])
+  @@index([status, availableFrom, availableTo])
+  @@map("examinations")
+}
+
+model ExamQuestion {
+  id          String  @id @default(cuid())
+  examId      String
+  number      Int
+  text        String
+  marks       Int     @default(1)
+  explanation String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  exam    Examination  @relation(fields: [examId], references: [id], onDelete: Cascade)
+  options ExamOption[]
+  answers ExamAnswer[]
+
+  @@unique([examId, number])
+  @@index([examId])
+  @@map("exam_questions")
+}
+
+model ExamOption {
+  id         String  @id @default(cuid())
+  questionId String
+  label      String // A | B | C | D | ...
+  text       String
+  /// Answer key. This column is never included in any payload sent to a student.
+  isCorrect  Boolean @default(false)
+  orderIndex Int     @default(0)
+
+  question ExamQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  answers  ExamAnswer[]
+
+  @@unique([questionId, label])
+  @@index([questionId])
+  @@map("exam_options")
+}
+
+model ExamAttempt {
+  id            String @id @default(cuid())
+  examId        String
+  studentId     String
+  attemptNumber Int    @default(1)
+
+  status String @default("IN_PROGRESS") // IN_PROGRESS | SUBMITTED | AUTO_SUBMITTED | ABANDONED
+
+  startedAt DateTime @default(now())
+  /// Server-side deadline. The client timer is a convenience only; scoring and
+  /// expiry are always evaluated against this value on the server.
+  expiresAt   DateTime
+  submittedAt DateTime?
+
+  /// JSON array of question ids, fixing this attempt's (possibly shuffled)
+  /// order so navigation and resume are stable across reloads.
+  questionOrder String @default("[]")
+
+  score           Int     @default(0)
+  totalMarks      Int     @default(0)
+  percentage      Float   @default(0)
+  grade           String?
+  passed          Boolean @default(false)
+  correctCount    Int     @default(0)
+  incorrectCount  Int     @default(0)
+  unansweredCount Int     @default(0)
+
+  ipAddress String?
+  userAgent String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  exam    Examination @relation(fields: [examId], references: [id], onDelete: Cascade)
+  student User        @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  answers ExamAnswer[]
+  result  Result?
+
+  @@unique([examId, studentId, attemptNumber])
+  @@index([studentId, status])
+  @@index([examId, status])
+  @@map("exam_attempts")
+}
+
+model ExamAnswer {
+  id               String   @id @default(cuid())
+  attemptId        String
+  questionId       String
+  selectedOptionId String?
+  isCorrect        Boolean?
+  marksAwarded     Int      @default(0)
+  answeredAt       DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  attempt        ExamAttempt  @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  question       ExamQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  selectedOption ExamOption?  @relation(fields: [selectedOptionId], references: [id], onDelete: SetNull)
+
+  @@unique([attemptId, questionId])
+  @@index([attemptId])
+  @@map("exam_answers")
+}
+
+/// Immutable analytics projection written once when an attempt is scored.
+/// Denormalised on purpose: class/subject reporting must not fan out across
+/// four joins for every dashboard tile, and a result must survive independently
+/// of later changes to the attempt row.
+model Result {
+  id        String @id @default(cuid())
+  attemptId String @unique
+  examId    String
+  studentId String
+  classId   String
+  subjectId String
+
+  score           Int
+  totalMarks      Int
+  percentage      Float
+  grade           String
+  passed          Boolean
+  correctCount    Int
+  incorrectCount  Int
+  unansweredCount Int
+  answeredCount   Int
+  durationSeconds Int
+  submittedAt     DateTime
+
+  createdAt DateTime @default(now())
+
+  attempt     ExamAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  exam        Examination @relation(fields: [examId], references: [id], onDelete: Cascade)
+  student     User        @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  schoolClass SchoolClass @relation(fields: [classId], references: [id], onDelete: Cascade)
+  subject     Subject     @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+
+  @@index([examId])
+  @@index([studentId])
+  @@index([classId, subjectId])
+  @@map("results")
+}
+
+/// One DOCX import run. The parsed payload is stored so the administrator can
+/// review the validation screen, fix the document, and re-parse without losing
+/// context — and so an import is auditable after the fact.
+model ExamImport {
+  id     String  @id @default(cuid())
+  fileId String
+  examId String?
+
+  status        String @default("PARSED") // PARSED | FAILED | COMMITTED | DISCARDED
+  questionCount Int    @default(0)
+  errorCount    Int    @default(0)
+  warningCount  Int    @default(0)
+
+  /// JSON: ParsedQuestion[]
+  payload String @default("[]")
+  /// JSON: ImportIssue[]
+  issues  String @default("[]")
+
+  createdById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  file      StoredFile   @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  exam      Examination? @relation(fields: [examId], references: [id], onDelete: SetNull)
+  createdBy User?        @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([createdById, createdAt])
+  @@map("exam_imports")
+}
+
+// -----------------------------------------------------------------------------
+// Forum
+// -----------------------------------------------------------------------------
+
+model ForumCategory {
+  id          String  @id @default(cuid())
+  name        String
+  slug        String  @unique
+  description String?
+  /// A class-scoped category is only visible to that class (plus staff).
+  classId     String?
+  isGlobal    Boolean @default(false)
+  isLocked    Boolean @default(false)
+  isActive    Boolean @default(true)
+  orderIndex  Int     @default(0)
+
+  createdById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  schoolClass SchoolClass? @relation(fields: [classId], references: [id], onDelete: Cascade)
+  createdBy   User?        @relation(fields: [createdById], references: [id], onDelete: SetNull)
+
+  posts ForumPost[]
+
+  @@index([classId])
+  @@map("forum_categories")
+}
+
+model ForumPost {
+  id         String  @id @default(cuid())
+  categoryId String
+  authorId   String
+  title      String
+  body       String
+  isPinned   Boolean @default(false)
+  isLocked   Boolean @default(false)
+  status     String  @default("VISIBLE") // VISIBLE | HIDDEN | DELETED
+
+  viewCount   Int       @default(0)
+  replyCount  Int       @default(0)
+  lastReplyAt DateTime?
+
+  moderatedById    String?
+  moderatedAt      DateTime?
+  moderationReason String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  category    ForumCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  author      User          @relation("ForumPostAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  moderatedBy User?         @relation("ForumPostModerator", fields: [moderatedById], references: [id], onDelete: SetNull)
+
+  replies ForumReply[]
+  reports ForumReport[]
+
+  @@index([categoryId, isPinned, lastReplyAt])
+  @@index([authorId])
+  @@map("forum_posts")
+}
+
+model ForumReply {
+  id            String  @id @default(cuid())
+  postId        String
+  authorId      String
+  parentReplyId String?
+  body          String
+  status        String  @default("VISIBLE") // VISIBLE | HIDDEN | DELETED
+
+  moderatedById    String?
+  moderatedAt      DateTime?
+  moderationReason String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  post        ForumPost   @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author      User        @relation("ForumReplyAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+  parent      ForumReply? @relation("ForumReplyThread", fields: [parentReplyId], references: [id], onDelete: SetNull)
+  moderatedBy User?       @relation("ForumReplyModerator", fields: [moderatedById], references: [id], onDelete: SetNull)
+
+  children ForumReply[]  @relation("ForumReplyThread")
+  reports  ForumReport[]
+
+  @@index([postId, createdAt])
+  @@map("forum_replies")
+}
+
+model ForumReport {
+  id         String  @id @default(cuid())
+  postId     String?
+  replyId    String?
+  reporterId String
+  reason     String
+  status     String  @default("OPEN") // OPEN | ACTIONED | DISMISSED
+
+  reviewedById String?
+  reviewedAt   DateTime?
+  reviewNote   String?
+
+  createdAt DateTime @default(now())
+
+  post       ForumPost?  @relation(fields: [postId], references: [id], onDelete: Cascade)
+  reply      ForumReply? @relation(fields: [replyId], references: [id], onDelete: Cascade)
+  reporter   User        @relation("ForumReportReporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  reviewedBy User?       @relation("ForumReportReviewer", fields: [reviewedById], references: [id], onDelete: SetNull)
+
+  @@index([status, createdAt])
+  @@map("forum_reports")
+}
+
+// -----------------------------------------------------------------------------
+// Administrative tasks
+// -----------------------------------------------------------------------------
+
+model Task {
+  id           String  @id @default(cuid())
+  title        String
+  description  String?
+  assignedToId String
+  createdById  String?
+  priority     String  @default("MEDIUM") // LOW | MEDIUM | HIGH | URGENT
+  status       String  @default("PENDING") // PENDING | IN_PROGRESS | COMPLETED | CANCELLED
+
+  dueDate        DateTime?
+  startedAt      DateTime?
+  completedAt    DateTime?
+  completedById  String?
+  completionNote String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  assignedTo  User  @relation("TaskAssignee", fields: [assignedToId], references: [id], onDelete: Cascade)
+  createdBy   User? @relation("TaskCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  completedBy User? @relation("TaskCompletedBy", fields: [completedById], references: [id], onDelete: SetNull)
+
+  history TaskHistory[]
+
+  @@index([assignedToId, status])
+  @@index([status, dueDate])
+  @@map("tasks")
+}
+
+model TaskHistory {
+  id         String   @id @default(cuid())
+  taskId     String
+  actorId    String?
+  action     String // CREATED | ASSIGNED | STARTED | STATUS_CHANGED | COMPLETED | CANCELLED | COMMENTED
+  fromStatus String?
+  toStatus   String?
+  note       String?
+  createdAt  DateTime @default(now())
+
+  task  Task  @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([taskId, createdAt])
+  @@map("task_history")
+}
+
+// -----------------------------------------------------------------------------
+// Notifications, audit log & settings
+// -----------------------------------------------------------------------------
+
+model Notification {
+  id     String  @id @default(cuid())
+  userId String
+  type   String // LESSON | EXAM | RESULT | FORUM | TASK | ACCOUNT | ANNOUNCEMENT
+  title  String
+  body   String?
+  link   String?
+  /// JSON blob of extra context; never contains secrets.
+  metadata String?
+
+  isRead Boolean   @default(false)
+  readAt DateTime?
+
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead, createdAt])
+  @@map("notifications")
+}
+
+/// Append-only. No application code path updates or deletes rows here; the
+/// database user used in production should be granted INSERT/SELECT only on
+/// this table (see docs/SECURITY.md).
+model AuditLog {
+  id            String  @id @default(cuid())
+  actorId       String?
+  actorUsername String?
+  actorRole     String?
+  action        String
+  targetType    String?
+  targetId      String?
+  description   String?
+  /// JSON blob. Sanitised before write — never contains hashes or secrets.
+  metadata      String?
+  ipAddress     String?
+  userAgent     String?
+  severity      String  @default("INFO") // INFO | WARNING | CRITICAL
+
+  createdAt DateTime @default(now())
+
+  actor User? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([createdAt])
+  @@index([action, createdAt])
+  @@index([actorId, createdAt])
+  @@index([targetType, targetId])
+  @@map("audit_logs")
+}
+
+model SystemSetting {
+  key         String   @id
+  value       String
+  valueType   String   @default("string") // string | number | boolean | json
+  category    String   @default("general")
+  description String?
+  updatedById String?
+  updatedAt   DateTime @updatedAt
+
+  updatedBy User? @relation(fields: [updatedById], references: [id], onDelete: SetNull)
+
+  @@map("system_settings")
+}

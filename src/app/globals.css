@@ -1,0 +1,408 @@
+@import 'tailwindcss';
+
+/* =============================================================================
+   Fodan College — design system
+   =============================================================================
+
+   The palette is taken from the school crest: brushed silver on a deep royal
+   blue, with a bright cyan for the data motif. Blue carries authority and reads
+   as "school"; the cyan and amber accents keep it approachable for a nine-year
+   old without tipping into a toy. Everything is expressed as CSS custom
+   properties so a single change re-themes the platform.
+
+   Dark mode is a first-class variant, not an afterthought: children study in
+   the evening, often on a phone.
+   ========================================================================== */
+
+@theme {
+  /* --- Brand ------------------------------------------------------------ */
+  --color-brand-50: #eef6ff;
+  --color-brand-100: #d9eaff;
+  --color-brand-200: #bcdaff;
+  --color-brand-300: #8ec3ff;
+  --color-brand-400: #59a2ff;
+  --color-brand-500: #327dff;
+  --color-brand-600: #1c5cf5;
+  --color-brand-700: #1547e1;
+  --color-brand-800: #183bb6;
+  --color-brand-900: #19378f;
+  --color-brand-950: #142257;
+
+  /* Cyan from the pixel motif in the crest */
+  --color-spark-300: #7de2ff;
+  --color-spark-400: #38cdf7;
+  --color-spark-500: #12b0e0;
+  --color-spark-600: #068bbd;
+
+  /* Brushed silver from the "F" */
+  --color-silver-100: #f4f6f9;
+  --color-silver-200: #e6eaf1;
+  --color-silver-300: #d2d9e4;
+  --color-silver-400: #b0bacb;
+  --color-silver-500: #8b96a9;
+
+  /* --- Semantic --------------------------------------------------------- */
+  --color-ink: #0d1b2f;
+  --color-ink-soft: #405270;
+
+  --color-success-50: #ecfdf5;
+  --color-success-500: #10b981;
+  --color-success-600: #059669;
+  --color-success-700: #047857;
+
+  --color-warn-50: #fffbeb;
+  --color-warn-500: #f59e0b;
+  --color-warn-600: #d97706;
+  --color-warn-700: #b45309;
+
+  --color-danger-50: #fef2f2;
+  --color-danger-500: #ef4444;
+  --color-danger-600: #dc2626;
+  --color-danger-700: #b91c1c;
+
+  /* --- Typography ------------------------------------------------------- */
+  /* System stacks rather than a web font: the platform must build and load
+     quickly on a slow connection, and a failed font fetch must never delay a
+     lesson or an examination timer. */
+  --font-sans:
+    ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue',
+    Arial, 'Noto Sans', sans-serif;
+  --font-display:
+    'Segoe UI Variable Display', 'Segoe UI', ui-sans-serif, system-ui,
+    -apple-system, Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono:
+    ui-monospace, 'Cascadia Mono', 'Segoe UI Mono', 'Roboto Mono', Menlo,
+    Consolas, monospace;
+
+  /* --- Shape & depth ---------------------------------------------------- */
+  --radius-card: 1rem;
+  --radius-field: 0.625rem;
+
+  --shadow-soft: 0 1px 2px rgb(13 27 47 / 0.06), 0 4px 16px rgb(13 27 47 / 0.06);
+  --shadow-lift: 0 4px 12px rgb(13 27 47 / 0.08), 0 16px 40px rgb(13 27 47 / 0.1);
+  --shadow-focus: 0 0 0 3px rgb(50 125 255 / 0.35);
+
+  /* --- Motion ----------------------------------------------------------- */
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+
+  --animate-fade-up: fade-up 0.32s var(--ease-out-soft) both;
+  --animate-fade-in: fade-in 0.24s var(--ease-out-soft) both;
+  --animate-pop: pop 0.2s var(--ease-out-soft) both;
+  --animate-slide-in: slide-in 0.28s var(--ease-out-soft) both;
+  --animate-shimmer: shimmer 1.6s linear infinite;
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes shimmer {
+  from {
+    background-position: -200% 0;
+  }
+  to {
+    background-position: 200% 0;
+  }
+}
+
+/* =============================================================================
+   Surface tokens — light and dark
+   ========================================================================== */
+
+@layer base {
+  :root {
+    --surface-page: #f6f8fc;
+    --surface-card: #ffffff;
+    --surface-raised: #ffffff;
+    --surface-sunken: #eef2f8;
+    --surface-inverse: #0d1b2f;
+
+    --text-strong: #0d1b2f;
+    --text-body: #33445e;
+    --text-muted: #6b7c96;
+    --text-inverse: #f4f6f9;
+
+    --line-soft: #e4e9f1;
+    --line-strong: #cfd7e4;
+
+    --focus-ring: #327dff;
+
+    color-scheme: light;
+  }
+
+  .dark {
+    --surface-page: #080f1c;
+    --surface-card: #101c31;
+    --surface-raised: #16243c;
+    --surface-sunken: #0b1526;
+    --surface-inverse: #f4f6f9;
+
+    --text-strong: #eef3fb;
+    --text-body: #c3cee0;
+    --text-muted: #8b9bb5;
+    --text-inverse: #0d1b2f;
+
+    --line-soft: #1e2f4b;
+    --line-strong: #2b4165;
+
+    --focus-ring: #59a2ff;
+
+    color-scheme: dark;
+  }
+
+  * {
+    border-color: var(--line-soft);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--surface-page);
+    color: var(--text-body);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    color: var(--text-strong);
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: -0.015em;
+  }
+
+  /* A visible, generous focus ring everywhere. Keyboard users are first-class,
+     and so are children navigating with a trackpad they have not mastered. */
+  :focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  ::selection {
+    background: var(--color-brand-200);
+    color: var(--color-brand-950);
+  }
+
+  /* Respect the operating-system preference. Animation is decoration here and
+     never carries meaning, so removing it costs nothing. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/* =============================================================================
+   Component conveniences
+   ========================================================================== */
+
+@layer components {
+  .surface {
+    background-color: var(--surface-card);
+    border: 1px solid var(--line-soft);
+    border-radius: var(--radius-card);
+  }
+
+  .text-strong {
+    color: var(--text-strong);
+  }
+  .text-body {
+    color: var(--text-body);
+  }
+  .text-muted {
+    color: var(--text-muted);
+  }
+
+  .bg-page {
+    background-color: var(--surface-page);
+  }
+  .bg-card {
+    background-color: var(--surface-card);
+  }
+  .bg-raised {
+    background-color: var(--surface-raised);
+  }
+  .bg-sunken {
+    background-color: var(--surface-sunken);
+  }
+
+  .border-soft {
+    border-color: var(--line-soft);
+  }
+  .border-strong {
+    border-color: var(--line-strong);
+  }
+
+  /* The signature background: a soft radial wash of brand blue and crest cyan,
+     used behind the landing page and the authentication screens. */
+  .brand-wash {
+    background-image:
+      radial-gradient(ellipse 80% 60% at 15% 0%, rgb(50 125 255 / 0.18), transparent 60%),
+      radial-gradient(ellipse 70% 60% at 95% 10%, rgb(56 205 247 / 0.16), transparent 55%),
+      radial-gradient(ellipse 90% 70% at 50% 105%, rgb(25 55 143 / 0.12), transparent 60%);
+  }
+
+  .dark .brand-wash {
+    background-image:
+      radial-gradient(ellipse 80% 60% at 15% 0%, rgb(50 125 255 / 0.16), transparent 60%),
+      radial-gradient(ellipse 70% 60% at 95% 10%, rgb(56 205 247 / 0.12), transparent 55%),
+      radial-gradient(ellipse 90% 70% at 50% 105%, rgb(20 34 87 / 0.5), transparent 60%);
+  }
+
+  /* Grid paper, echoing an exercise book. Very low contrast on purpose. */
+  .grid-paper {
+    background-image:
+      linear-gradient(to right, rgb(13 27 47 / 0.04) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(13 27 47 / 0.04) 1px, transparent 1px);
+    background-size: 28px 28px;
+  }
+
+  .dark .grid-paper {
+    background-image:
+      linear-gradient(to right, rgb(255 255 255 / 0.035) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(255 255 255 / 0.035) 1px, transparent 1px);
+  }
+
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      var(--surface-sunken) 25%,
+      var(--line-soft) 37%,
+      var(--surface-sunken) 63%
+    );
+    background-size: 200% 100%;
+    animation: var(--animate-shimmer);
+  }
+
+  /* Scrollbars inside panels, so long tables and question lists stay tidy. */
+  .thin-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: var(--line-strong) transparent;
+  }
+  .thin-scroll::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  .thin-scroll::-webkit-scrollbar-thumb {
+    background-color: var(--line-strong);
+    border-radius: 999px;
+  }
+  .thin-scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+@layer utilities {
+  /* Visible only to assistive technology. */
+  .sr-only-focusable:not(:focus):not(:focus-within) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+
+  .animate-fade-up {
+    animation: var(--animate-fade-up);
+  }
+  .animate-fade-in {
+    animation: var(--animate-fade-in);
+  }
+  .animate-pop {
+    animation: var(--animate-pop);
+  }
+  .animate-slide-in {
+    animation: var(--animate-slide-in);
+  }
+
+  /* Staggered entrance for card grids. */
+  .stagger > * {
+    animation: var(--animate-fade-up);
+  }
+  .stagger > *:nth-child(2) {
+    animation-delay: 40ms;
+  }
+  .stagger > *:nth-child(3) {
+    animation-delay: 80ms;
+  }
+  .stagger > *:nth-child(4) {
+    animation-delay: 120ms;
+  }
+  .stagger > *:nth-child(5) {
+    animation-delay: 160ms;
+  }
+  .stagger > *:nth-child(6) {
+    animation-delay: 200ms;
+  }
+  .stagger > *:nth-child(n + 7) {
+    animation-delay: 240ms;
+  }
+}
+
+/* Printed reports (result slips, class sheets) drop the interface chrome. */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: #ffffff;
+    color: #000000;
+  }
+  .surface {
+    border-color: #cccccc;
+    box-shadow: none;
+  }
+}
