@@ -35,12 +35,10 @@ export async function requireUser(): Promise<AuthUser> {
   return user;
 }
 
-export async function requireRole(...roles: RoleKey[]): Promise<AuthUser> {
-  const user = await requireUser();
+export function requireRole(user: AuthUser, roles: RoleKey[]): void {
   if (!roles.includes(user.role)) {
     throw forbidden('This area is not available to your account.');
   }
-  return user;
 }
 
 export async function requireStaff(): Promise<AuthUser> {
@@ -59,24 +57,22 @@ export async function requireSuperAdmin(): Promise<AuthUser> {
   return user;
 }
 
-export async function requirePermission(
+export function requirePermission(
+  user: AuthUser,
   permission: PermissionKey,
-): Promise<AuthUser> {
-  const user = await requireUser();
+): void {
   if (!hasPermission(user, permission)) {
     throw forbidden('You do not have permission to do that.');
   }
-  return user;
 }
 
-export async function requireAnyPermission(
-  ...permissions: PermissionKey[]
-): Promise<AuthUser> {
-  const user = await requireUser();
+export function requireAnyPermission(
+  user: AuthUser,
+  permissions: PermissionKey[]
+): void {
   if (!hasAnyPermission(user, permissions)) {
     throw forbidden('You do not have permission to do that.');
   }
-  return user;
 }
 
 export async function requireStudent(): Promise<AuthUser> {
