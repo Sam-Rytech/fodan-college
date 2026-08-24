@@ -70,7 +70,7 @@ export async function createAdminAction(
     });
 
     await recordAudit({
-      action: AUDIT_ACTIONS.CREATE,
+      action: AUDIT_ACTIONS.USER_CREATED,
       actor: user,
       targetType: 'user',
       targetId: newAdmin.id,
