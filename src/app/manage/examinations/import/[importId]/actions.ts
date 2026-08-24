@@ -92,7 +92,7 @@ export async function commitImportAction(
     });
 
     await recordAudit({
-      action: AUDIT_ACTIONS.CREATE,
+      action: AUDIT_ACTIONS.EXAM_CREATED,
       actor: user,
       targetType: 'examination',
       targetId: examination.id,

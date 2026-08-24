@@ -66,7 +66,7 @@ export async function saveSubjectAction(
       });
 
       await recordAudit({
-        action: AUDIT_ACTIONS.UPDATE,
+        action: AUDIT_ACTIONS.SUBJECT_UPDATED,
         actor: user,
         targetType: 'subject',
         targetId: input.id,
@@ -90,7 +90,7 @@ export async function saveSubjectAction(
       });
 
       await recordAudit({
-        action: AUDIT_ACTIONS.CREATE,
+        action: AUDIT_ACTIONS.SUBJECT_CREATED,
         actor: user,
         targetType: 'subject',
         targetId: newSubject.id,

@@ -59,7 +59,7 @@ export async function uploadMaterialAction(
     });
 
     await recordAudit({
-      action: AUDIT_ACTIONS.CREATE,
+      action: AUDIT_ACTIONS.MATERIAL_CREATED,
       actor: user,
       targetType: 'learning_material',
       targetId: material.id,

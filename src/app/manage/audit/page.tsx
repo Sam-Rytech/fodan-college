@@ -1,6 +1,6 @@
 import { type Metadata } from 'next';
 import { Search, AlertTriangle, Info, AlertOctagon } from 'lucide-react';
-import { guardStaff } from '@/lib/auth/guards';
+import { guardStaff, requireRole } from '@/lib/auth/guards';
 
 import { ROLES, AUDIT_SEVERITY } from '@/lib/constants';
 import { queryAuditLogs, listAuditActions } from '@/lib/audit';

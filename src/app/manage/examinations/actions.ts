@@ -35,7 +35,7 @@ export async function setExamStatusAction(
     });
 
     await recordAudit({
-      action: AUDIT_ACTIONS.UPDATE,
+      action: AUDIT_ACTIONS.EXAM_UPDATED,
       actor: user,
       targetType: 'examination',
       targetId: input.examId,

@@ -286,22 +286,22 @@ export async function listStudents(user: AuthUser, query: StudentQuery) {
     ...(query.status === 'activated' ? { isActivated: true } : {}),
     ...(query.status === 'active' || query.status === 'disabled'
       ? {
-          user: {
-            status:
-              query.status === 'active' ? USER_STATUS.ACTIVE : USER_STATUS.DISABLED,
-          },
-        }
+        user: {
+          status:
+            query.status === 'active' ? USER_STATUS.ACTIVE : USER_STATUS.DISABLED,
+        },
+      }
       : {}),
     ...(query.search
       ? {
-          user: {
-            OR: [
-              { fullName: { contains: query.search } },
-              { username: { contains: query.search } },
-              { email: { contains: query.search } },
-            ],
-          },
-        }
+        user: {
+          OR: [
+            { fullName: { contains: query.search } },
+            { username: { contains: query.search } },
+            { email: { contains: query.search } },
+          ],
+        },
+      }
       : {}),
   };
 

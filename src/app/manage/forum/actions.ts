@@ -54,7 +54,7 @@ export async function resolveReportAction(
     }
 
     await recordAudit({
-      action: AUDIT_ACTIONS.UPDATE,
+      action: AUDIT_ACTIONS.FORUM_MODERATED,
       actor: user,
       targetType: 'forum_report',
       targetId: reportId,

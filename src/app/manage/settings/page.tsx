@@ -1,5 +1,5 @@
 import { type Metadata } from 'next';
-import { guardStaff } from '@/lib/auth/guards';
+import { guardStaff, requireRole } from '@/lib/auth/guards';
 
 import { ROLES, SETTING_DEFINITIONS } from '@/lib/constants';
 import { getSettings } from '@/lib/settings';

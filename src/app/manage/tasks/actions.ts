@@ -42,7 +42,7 @@ export async function createTaskAction(
     });
 
     await recordAudit({
-      action: AUDIT_ACTIONS.CREATE,
+      action: AUDIT_ACTIONS.TASK_CREATED,
       actor: user,
       targetType: 'task',
       targetId: task.id,

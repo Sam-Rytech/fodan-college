@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { actionSuccess, parseForm, runAction, type ActionResult } from '@/lib/actions';
 import { settingsSchema } from '@/lib/validation';
-import { guardStaff } from '@/lib/auth/guards';
+import { guardStaff, requireRole } from '@/lib/auth/guards';
 
 import { ROLES, AUDIT_ACTIONS } from '@/lib/constants';
 import { updateSettings } from '@/lib/settings';
@@ -25,7 +25,7 @@ export async function updateSettingsAction(
 
     if (changes.length > 0) {
       await recordAudit({
-        action: AUDIT_ACTIONS.UPDATE,
+        action: AUDIT_ACTIONS.SETTINGS_UPDATED,
         actor: user,
         targetType: 'system_settings',
         description: `Updated ${changes.length} system setting(s).`,

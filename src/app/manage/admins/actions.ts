@@ -134,7 +134,7 @@ export async function updateAdminSettingsAction(
     ]);
 
     await recordAudit({
-      action: AUDIT_ACTIONS.UPDATE,
+      action: AUDIT_ACTIONS.USER_UPDATED,
       actor: user,
       targetType: 'user',
       targetId: admin.id,

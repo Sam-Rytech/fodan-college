@@ -53,7 +53,7 @@ export async function saveStudentAction(
       ]);
 
       await recordAudit({
-        action: AUDIT_ACTIONS.UPDATE,
+        action: AUDIT_ACTIONS.USER_UPDATED,
         actor: user,
         targetType: 'user',
         targetId: input.userId,
@@ -94,7 +94,7 @@ export async function saveStudentAction(
       });
 
       await recordAudit({
-        action: AUDIT_ACTIONS.CREATE,
+        action: AUDIT_ACTIONS.USER_CREATED,
         actor: user,
         targetType: 'user',
         targetId: newUser.id,

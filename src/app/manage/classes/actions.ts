@@ -39,7 +39,7 @@ export async function saveClassAction(
       });
 
       await recordAudit({
-        action: AUDIT_ACTIONS.UPDATE,
+        action: AUDIT_ACTIONS.CLASS_UPDATED,
         actor: user,
         targetType: 'class',
         targetId: input.id,
@@ -58,7 +58,7 @@ export async function saveClassAction(
       });
 
       await recordAudit({
-        action: AUDIT_ACTIONS.CREATE,
+        action: AUDIT_ACTIONS.CLASS_CREATED,
         actor: user,
         targetType: 'class',
         targetId: newClass.id,
