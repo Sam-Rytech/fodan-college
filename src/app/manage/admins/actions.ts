@@ -61,7 +61,7 @@ export async function createAdminAction(
           })),
         },
         classAssignments: {
-          create: input.classIds?.map(cId => ({ classId })) || [],
+          create: input.classIds?.map(cId => ({ classId: cId })) || [],
         },
         subjectAssignments: {
           create: input.subjectIds?.map(sId => ({ subjectId: sId })) || [],
