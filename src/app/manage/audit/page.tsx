@@ -6,7 +6,7 @@ import { ROLES, AUDIT_SEVERITY } from '@/lib/constants';
 import { queryAuditLogs, listAuditActions } from '@/lib/audit';
 import { Button } from '@/components/ui/button';
 import { TableWrap, Table, Thead, Th, Tbody, Tr, Td, TableEmpty, Pagination } from '@/components/ui/table';
-import { formatDate, formatDateTime, formatDateTime } from '@/lib/utils';
+import { formatDate, formatDateTime } from '@/lib/utils';
 
 export const metadata: Metadata = { title: 'Audit Trail' };
 

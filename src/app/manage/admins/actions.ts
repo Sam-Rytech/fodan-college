@@ -7,7 +7,7 @@ import { prisma } from '@/lib/db';
 import { guardStaff } from '@/lib/auth/guards';
 
 import { PERMISSIONS, ROLES, USER_STATUS } from '@/lib/constants';
-import { hashPassword } from '@/lib/auth/password';
+import { hashPassword } from '@/lib/password';
 import { recordAudit } from '@/lib/audit';
 import { AUDIT_ACTIONS } from '@/lib/constants';
 

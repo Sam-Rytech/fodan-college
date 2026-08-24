@@ -37,7 +37,7 @@ prisma/dev.db-journal
 *.sqlite3
 
 # uploaded files (dev local storage lives outside the public web root)
-storage/
+/storage/
 !storage/.gitkeep
 
 # test / coverage
