@@ -22,7 +22,7 @@ export default async function NewForumPostPage({
   if (!category || !category.isActive || category.isLocked) notFound();
 
   // Validate access
-  if (user.role.key === ROLES.STUDENT && !category.isGlobal) {
+  if (user.role === ROLES.STUDENT && !category.isGlobal) {
     const profile = await prisma.studentProfile.findUnique({ where: { userId: user.id } });
     if (profile?.classId !== category.classId) {
       redirect('/forum'); // Unauthorized

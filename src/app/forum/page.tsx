@@ -12,7 +12,7 @@ export default async function ForumIndexPage() {
   const user = await guardUser();
 
   let classId: string | null = null;
-  if (user.role.key === ROLES.STUDENT) {
+  if (user.role === ROLES.STUDENT) {
     const profile = await prisma.studentProfile.findUnique({ where: { userId: user.id } });
     classId = profile?.classId ?? null;
   }
@@ -23,7 +23,7 @@ export default async function ForumIndexPage() {
       OR: [
         { isGlobal: true },
         ...(classId ? [{ classId }] : []),
-        ...(user.role.key !== ROLES.STUDENT ? [{}] : []) // Staff see everything
+        ...(user.role !== ROLES.STUDENT ? [{}] : []) // Staff see everything
       ],
     },
     orderBy: [

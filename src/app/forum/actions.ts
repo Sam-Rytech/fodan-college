@@ -31,7 +31,7 @@ export async function createPostAction(
     }
 
     // Verify access
-    if (user.role.key === 'STUDENT' && !category.isGlobal) {
+    if (user.role === 'STUDENT' && !category.isGlobal) {
       const profile = await prisma.studentProfile.findUnique({ where: { userId: user.id } });
       if (profile?.classId !== category.classId) {
         throw new Error('You do not have access to post in this category.');
