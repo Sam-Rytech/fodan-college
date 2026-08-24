@@ -2,7 +2,7 @@ import { type Metadata } from 'next';
 import Link from 'next/link';
 import { Plus, ShieldAlert } from 'lucide-react';
 import { prisma } from '@/lib/db';
-import { guardStaff } from '@/lib/auth/guards';
+import { guardStaff, requirePermission } from '@/lib/auth/guards';
 
 import { PERMISSIONS, ROLES } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
@@ -15,10 +15,10 @@ export default async function ManageAdminsPage() {
   requirePermission(user, PERMISSIONS.MANAGE_ADMINS);
 
   const admins = await prisma.user.findMany({
-    where: { role: { key: { in: [ROLES.MINI_ADMIN, ROLES.SUPER_ADMIN] } } },
+    where: { role: { in: [ROLES.MINI_ADMIN, ROLES.SUPER_ADMIN] } },
     orderBy: { fullName: 'asc' },
     include: {
-      role: true,
+      
       _count: {
         select: { classAssignments: true, subjectAssignments: true },
       },
@@ -63,18 +63,18 @@ export default async function ManageAdminsPage() {
                 <Tr key={admin.id}>
                   <Td className="font-medium text-[var(--text-strong)]">
                     <div className="flex items-center gap-2">
-                      {admin.role.key === ROLES.SUPER_ADMIN && (
+                      {admin.role === ROLES.SUPER_ADMIN && (
                         <ShieldAlert className="size-4 text-warning-500" />
                       )}
                       {admin.fullName}
                     </div>
                   </Td>
-                  <Td>{admin.role.name}</Td>
+                  <Td>{admin.role === ROLES.SUPER_ADMIN ? 'Super Admin' : 'Admin'}</Td>
                   <Td numeric>
-                    {admin.role.key === ROLES.SUPER_ADMIN ? 'All' : admin._count.classAssignments}
+                    {admin.role === ROLES.SUPER_ADMIN ? 'All' : admin._count.classAssignments}
                   </Td>
                   <Td numeric>
-                    {admin.role.key === ROLES.SUPER_ADMIN ? 'All' : admin._count.subjectAssignments}
+                    {admin.role === ROLES.SUPER_ADMIN ? 'All' : admin._count.subjectAssignments}
                   </Td>
                   <Td>
                     {admin.status === 'ACTIVE' ? (
@@ -88,7 +88,7 @@ export default async function ManageAdminsPage() {
                     )}
                   </Td>
                   <Td numeric>
-                    {admin.id !== user.id && admin.role.key !== ROLES.SUPER_ADMIN && (
+                    {admin.id !== user.id && admin.role !== ROLES.SUPER_ADMIN && (
                       <Button variant="ghost" size="sm" asChild>
                         <Link href={`/manage/admins/${admin.id}`}>Manage</Link>
                       </Button>

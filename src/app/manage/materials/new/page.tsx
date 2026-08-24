@@ -1,6 +1,6 @@
 import { type Metadata } from 'next';
 import { prisma } from '@/lib/db';
-import { guardStaff } from '@/lib/auth/guards';
+import { guardStaff, requirePermission } from '@/lib/auth/guards';
 
 import { PERMISSIONS } from '@/lib/constants';
 import { MaterialForm } from './material-form';

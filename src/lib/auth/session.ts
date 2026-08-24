@@ -182,7 +182,7 @@ export const loadSession = cache(async (): Promise<LoadedSession | null> => {
   }
 
   const user = record.user;
-  const roleKey = user.role.key as RoleKey;
+  const roleKey = user.role as RoleKey;
 
   return {
     session: {

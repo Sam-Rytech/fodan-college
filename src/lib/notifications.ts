@@ -99,7 +99,7 @@ export async function notifyStaff(
     : [ROLES.MINI_ADMIN, ROLES.SUPER_ADMIN];
 
   const staff = await prisma.user.findMany({
-    where: { status: 'ACTIVE', role: { key: { in: roles } } },
+    where: { status: 'ACTIVE', role: { in: roles } },
     select: { id: true },
   });
   return notifyMany(

@@ -1,6 +1,6 @@
 import { type Metadata } from 'next';
 import { prisma } from '@/lib/db';
-import { guardStaff } from '@/lib/auth/guards';
+import { guardStaff, requirePermission } from '@/lib/auth/guards';
 import { ROLES } from '@/lib/constants';
 import { TaskForm } from './task-form';
 
@@ -10,7 +10,7 @@ export default async function CreateTaskPage() {
   await guardStaff(); // Anyone on staff can create a task
 
   const staff = await prisma.user.findMany({
-    where: { role: { key: { in: [ROLES.MINI_ADMIN, ROLES.SUPER_ADMIN] } }, status: 'ACTIVE' },
+    where: { role: { in: [ROLES.MINI_ADMIN, ROLES.SUPER_ADMIN] }, status: 'ACTIVE' },
     orderBy: { fullName: 'asc' },
   });
 

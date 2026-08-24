@@ -2,7 +2,7 @@ import { type Metadata } from 'next';
 import Link from 'next/link';
 import { Plus, Search, Key } from 'lucide-react';
 import { prisma } from '@/lib/db';
-import { guardStaff } from '@/lib/auth/guards';
+import { guardStaff, requirePermission } from '@/lib/auth/guards';
 
 import { PERMISSIONS } from '@/lib/constants';
 import { listAccessCodes } from '@/lib/access-codes';

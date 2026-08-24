@@ -1,7 +1,7 @@
 import { type Metadata } from 'next';
 import { MessageSquare, AlertTriangle } from 'lucide-react';
 import { prisma } from '@/lib/db';
-import { guardStaff } from '@/lib/auth/guards';
+import { guardStaff, requirePermission } from '@/lib/auth/guards';
 
 import { PERMISSIONS } from '@/lib/constants';
 import { TableWrap, Table, Thead, Th, Tbody, Tr, Td, TableEmpty } from '@/components/ui/table';

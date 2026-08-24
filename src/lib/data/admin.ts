@@ -48,11 +48,11 @@ export async function getSuperAdminDashboard() {
     prisma.studentProfile.count(),
     prisma.studentProfile.count({ where: { isActivated: true } }),
     prisma.user.count({
-      where: { role: { key: ROLES.STUDENT }, status: USER_STATUS.DISABLED },
+      where: { role: ROLES.STUDENT, status: USER_STATUS.DISABLED },
     }),
-    prisma.user.count({ where: { role: { key: ROLES.MINI_ADMIN } } }),
+    prisma.user.count({ where: { role: ROLES.MINI_ADMIN } }),
     prisma.user.count({
-      where: { role: { key: ROLES.MINI_ADMIN }, status: USER_STATUS.ACTIVE },
+      where: { role: ROLES.MINI_ADMIN, status: USER_STATUS.ACTIVE },
     }),
     prisma.subject.count({ where: { isActive: true } }),
     prisma.schoolClass.count({ where: { isActive: true } }),
@@ -66,7 +66,7 @@ export async function getSuperAdminDashboard() {
     }),
     prisma.result.aggregate({ _avg: { percentage: true }, _count: { _all: true } }),
     prisma.user.findMany({
-      where: { role: { key: ROLES.STUDENT }, createdAt: { gte: weekAgo } },
+      where: { role: ROLES.STUDENT, createdAt: { gte: weekAgo } },
       orderBy: { createdAt: 'desc' },
       take: 6,
       select: {

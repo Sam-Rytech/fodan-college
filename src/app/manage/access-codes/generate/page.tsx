@@ -1,6 +1,6 @@
 import { type Metadata } from 'next';
 import { prisma } from '@/lib/db';
-import { guardStaff } from '@/lib/auth/guards';
+import { guardStaff, requirePermission } from '@/lib/auth/guards';
 
 import { PERMISSIONS } from '@/lib/constants';
 import { GenerateCodesForm } from './generate-codes-form';
@@ -14,7 +14,7 @@ export default async function GenerateCodesPage() {
   // Fetch inactive students (who don't have active codes, or are not activated yet)
   const students = await prisma.user.findMany({
     where: { 
-      role: { key: 'STUDENT' },
+      role: 'STUDENT',
       studentProfile: { isActivated: false }
     },
     include: {
