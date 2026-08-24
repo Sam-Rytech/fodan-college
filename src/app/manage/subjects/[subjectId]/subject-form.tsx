@@ -23,7 +23,7 @@ export function SubjectForm({
     }
   }, [state, router]);
 
-  const errors = state?.ok === false ? state.details : {};
+  const errors = state?.ok === false ? state.fieldErrors : {};
   const selectedClassIds = initialData?.classes?.map((c: any) => c.classId) || [];
 
   return (

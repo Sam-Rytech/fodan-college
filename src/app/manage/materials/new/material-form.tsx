@@ -22,7 +22,7 @@ export function MaterialForm({
     }
   }, [state, router]);
 
-  const errors = state?.ok === false ? state.details : {};
+  const errors = state?.ok === false ? state.fieldErrors : {};
 
   return (
     <form action={action} className="space-y-8">

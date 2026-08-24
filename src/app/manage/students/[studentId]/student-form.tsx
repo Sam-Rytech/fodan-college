@@ -27,7 +27,7 @@ export function StudentForm({
     }
   }, [state, router]);
 
-  const errors = state?.ok === false ? state.details : {};
+  const errors = state?.ok === false ? state.fieldErrors : {};
   
   // Filter classes by selected level
   const availableClasses = classes.filter(c => c.level === selectedLevel);
