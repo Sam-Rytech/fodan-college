@@ -79,7 +79,7 @@ export async function generateAccessCode(
     include: { studentProfile: { include: { schoolClass: true } }, role: true },
   });
 
-  if (!student || student.role !== 'STUDENT' || !student.studentProfile) {
+  if (!student || student.role.key !== 'STUDENT' || !student.studentProfile) {
     throw notFound('That student could not be found.');
   }
 

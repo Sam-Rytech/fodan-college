@@ -14,7 +14,7 @@ export default async function GenerateCodesPage() {
   // Fetch inactive students (who don't have active codes, or are not activated yet)
   const students = await prisma.user.findMany({
     where: { 
-      role: 'STUDENT',
+      role: { key: 'STUDENT' },
       studentProfile: { isActivated: false }
     },
     include: {

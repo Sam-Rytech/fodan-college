@@ -10,7 +10,7 @@ export default async function CreateTaskPage() {
   await guardStaff(); // Anyone on staff can create a task
 
   const staff = await prisma.user.findMany({
-    where: { role: { in: [ROLES.MINI_ADMIN, ROLES.SUPER_ADMIN] }, status: 'ACTIVE' },
+    where: { role: { key: { in: [ROLES.MINI_ADMIN, ROLES.SUPER_ADMIN] } }, status: 'ACTIVE' },
     orderBy: { fullName: 'asc' },
   });
 

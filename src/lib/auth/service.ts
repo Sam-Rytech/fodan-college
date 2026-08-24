@@ -110,7 +110,7 @@ export async function login(
     if (shouldLock) {
       await recordAudit({
         action: AUDIT_ACTIONS.ACCOUNT_LOCKED,
-        actor: { id: user.id, username: user.username, role: user.role as RoleKey },
+        actor: { id: user.id, username: user.username, role: user.role.key as RoleKey },
         targetType: 'user',
         targetId: user.id,
         description: `Account locked after ${failures} failed sign-in attempts.`,
@@ -163,7 +163,7 @@ export async function login(
 
   await recordAudit({
     action: AUDIT_ACTIONS.LOGIN_SUCCESS,
-    actor: { id: user.id, username: user.username, role: user.role as RoleKey },
+    actor: { id: user.id, username: user.username, role: user.role.key as RoleKey },
     targetType: 'user',
     targetId: user.id,
     description: `${user.fullName} signed in.`,
@@ -171,7 +171,7 @@ export async function login(
 
   return {
     userId: user.id,
-    role: user.role as RoleKey,
+    role: user.role.key as RoleKey,
     mustChangePassword: user.mustChangePassword,
   };
 }
@@ -276,7 +276,7 @@ export async function registerStudent(input: RegisterInput): Promise<string> {
     }
   }
 
-  const studentRole = await prisma.role.findUnique({ where: { key: ROLES.STUDENT } });
+  const studentRole = await prisma.role.key.findUnique({ where: { key: ROLES.STUDENT } });
   if (!studentRole) {
     throw new AppError('INTERNAL', 'The platform is not fully set up yet.', {
       internal: 'STUDENT role missing — run the seed script.',
@@ -447,7 +447,7 @@ export async function adminResetPassword(
   });
   if (!target) throw notFound('That account could not be found.');
 
-  if (target.role === ROLES.SUPER_ADMIN && target.id !== actor.id) {
+  if (target.role.key === ROLES.SUPER_ADMIN && target.id !== actor.id) {
     throw new AppError(
       'FORBIDDEN',
       'The Super Admin password can only be changed by the Super Admin.',
@@ -485,7 +485,7 @@ export async function adminResetPassword(
     targetId: targetUserId,
     description: `${actor.fullName} reset the password for ${target.fullName} (${target.username}).`,
     severity: AUDIT_SEVERITY.CRITICAL,
-    metadata: { targetRole: target.role, mustChangePassword: true },
+    metadata: { targetRole: target.role.key, mustChangePassword: true },
   });
 
   await notify({
@@ -543,7 +543,7 @@ export async function requestPasswordReset(
 
   await recordAudit({
     action: AUDIT_ACTIONS.PASSWORD_RESET_REQUESTED,
-    actor: { id: user.id, username: user.username, role: user.role as RoleKey },
+    actor: { id: user.id, username: user.username, role: user.role.key as RoleKey },
     targetType: 'user',
     targetId: user.id,
     description: `${user.fullName} requested a password reset.`,
@@ -628,7 +628,7 @@ export async function completePasswordReset(
     actor: {
       id: record.user.id,
       username: record.user.username,
-      role: record.user.role as RoleKey,
+      role: record.user.role.key as RoleKey,
     },
     targetType: 'user',
     targetId: record.userId,
