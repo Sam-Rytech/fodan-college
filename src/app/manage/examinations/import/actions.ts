@@ -3,7 +3,7 @@
 import { redirect } from 'next/navigation';
 import { actionSuccess, actionError, runAction, type ActionResult } from '@/lib/actions';
 import { prisma } from '@/lib/db';
-import { guardStaff } from '@/lib/auth/guards';
+import { guardStaff, requirePermission } from '@/lib/auth/guards';
 
 import { PERMISSIONS } from '@/lib/constants';
 import { validateUpload, storeValidatedUpload } from '@/lib/storage';

@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { actionSuccess, parseForm, runAction, type ActionResult } from '@/lib/actions';
 import { createAdminSchema, updateAdminAssignmentsSchema, updateAdminPermissionsSchema } from '@/lib/validation';
 import { prisma } from '@/lib/db';
-import { guardStaff } from '@/lib/auth/guards';
+import { guardStaff, requirePermission } from '@/lib/auth/guards';
 
 import { PERMISSIONS, ROLES, USER_STATUS } from '@/lib/constants';
 import { hashPassword } from '@/lib/password';
