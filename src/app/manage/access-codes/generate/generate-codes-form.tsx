@@ -21,8 +21,8 @@ export function GenerateCodesForm({
   const [generatedCodes, setGeneratedCodes] = useState<GeneratedCode[] | null>(null);
 
   React.useEffect(() => {
-    if (state?.ok && state.value) {
-      setGeneratedCodes(state.value);
+    if (state?.ok && state.data) {
+      setGeneratedCodes(state.data);
     }
   }, [state]);
 
