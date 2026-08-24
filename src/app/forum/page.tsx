@@ -3,13 +3,13 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { MessageSquare, Users } from 'lucide-react';
 import { prisma } from '@/lib/db';
-import { guardAuth } from '@/lib/auth/guards';
+import { guardUser } from '@/lib/auth/guards';
 import { ROLES } from '@/lib/constants';
 
-export const metadata: Metadata = { title: 'Forum Categories' };
+export const metadata: Metadata = { title: 'Forum' };
 
 export default async function ForumIndexPage() {
-  const user = await guardAuth();
+  const user = await guardUser();
 
   let classId: string | null = null;
   if (user.role.key === ROLES.STUDENT) {

@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { Plus, MessageSquare, Pin, Lock, Users } from 'lucide-react';
 import { prisma } from '@/lib/db';
-import { guardAuth } from '@/lib/auth/guards';
+import { guardUser } from '@/lib/auth/guards';
 import { ROLES } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
 import { TableWrap, Table, Thead, Th, Tbody, Tr, Td, TableEmpty } from '@/components/ui/table';

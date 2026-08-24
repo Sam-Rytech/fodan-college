@@ -1,7 +1,7 @@
 import { type Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
 import { prisma } from '@/lib/db';
-import { guardAuth } from '@/lib/auth/guards';
+import { guardUser } from '@/lib/auth/guards';
 import { ROLES } from '@/lib/constants';
 import { PostForm } from './post-form';
 
@@ -13,7 +13,7 @@ export default async function NewForumPostPage({
   params: Promise<{ categorySlug: string }>;
 }) {
   const { categorySlug } = await params;
-  const user = await guardAuth();
+  const user = await guardUser();
 
   const category = await prisma.forumCategory.findUnique({
     where: { slug: categorySlug },

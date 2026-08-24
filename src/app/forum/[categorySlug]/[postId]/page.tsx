@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { Lock, AlertTriangle, ArrowLeft } from 'lucide-react';
 import { prisma } from '@/lib/db';
-import { guardAuth } from '@/lib/auth/guards';
+import { guardUser } from '@/lib/auth/guards';
 import { ROLES } from '@/lib/constants';
 import { RichText } from '@/components/forum/rich-text';
 import { ReplyForm } from './reply-form';

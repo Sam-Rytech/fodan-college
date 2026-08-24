@@ -4,21 +4,21 @@ import { revalidatePath } from 'next/cache';
 import { actionSuccess, parseForm, runAction, type ActionResult } from '@/lib/actions';
 import { forumPostSchema, forumReplySchema } from '@/lib/validation';
 import { prisma } from '@/lib/db';
-import { guardAuth } from '@/lib/auth/guards';
-import { rateLimit } from '@/lib/rate-limit';
+import { requireUser } from '@/lib/auth/guards';
+import { enforceRateLimit, RATE_LIMITS } from '@/lib/rate-limit';
 
 export async function createPostAction(
   _previous: ActionResult<null> | null,
   formData: FormData,
 ): Promise<ActionResult<{ categorySlug: string; postId: string }>> {
   return runAction(async () => {
-    const user = await guardAuth();
+    const user = await requireUser();
 
     if (user.forumSuspendedUntil && new Date(user.forumSuspendedUntil) > new Date()) {
       throw new Error(`Your forum access is suspended until ${new Date(user.forumSuspendedUntil).toLocaleDateString()}.`);
     }
 
-    await rateLimit('forum-post', user.id);
+    await enforceRateLimit(RATE_LIMITS.forumPost, user.id);
 
     const input = parseForm(forumPostSchema, formData);
 
@@ -59,13 +59,13 @@ export async function createReplyAction(
   formData: FormData,
 ): Promise<ActionResult<null>> {
   return runAction(async () => {
-    const user = await guardAuth();
+    const user = await requireUser();
 
     if (user.forumSuspendedUntil && new Date(user.forumSuspendedUntil) > new Date()) {
       throw new Error(`Your forum access is suspended until ${new Date(user.forumSuspendedUntil).toLocaleDateString()}.`);
     }
 
-    await rateLimit('forum-reply', user.id);
+    await enforceRateLimit(RATE_LIMITS.forumPost, user.id);
 
     const input = parseForm(forumReplySchema, formData);
 
@@ -82,7 +82,7 @@ export async function createReplyAction(
       throw new Error('This discussion is locked.');
     }
 
-    const reply = await prisma.forumReply.create({
+    await prisma.forumReply.create({
       data: {
         body: input.body,
         postId: post.id,
