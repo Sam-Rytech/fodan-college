@@ -59,9 +59,9 @@ export function TaskForm({
         </div>
       </FieldSet>
 
-      {state?.ok === false && state.message && (
+      {state?.ok === false && state.error && (
         <div className="rounded-md bg-danger-50 p-4 text-sm text-danger-700">
-          {state.message}
+          {state.error}
         </div>
       )}
 

@@ -103,9 +103,9 @@ export function CommitForm({
         <p className="text-xs text-[var(--text-muted)] mt-1">Leave empty if the exam should be available indefinitely (once published).</p>
       </FieldSet>
 
-      {state?.ok === false && state.message && (
+      {state?.ok === false && state.error && (
         <div className="rounded-md bg-danger-50 p-4 text-sm text-danger-700">
-          {state.message}
+          {state.error}
         </div>
       )}
 

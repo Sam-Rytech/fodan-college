@@ -92,9 +92,9 @@ export function MaterialForm({
         <Toggle name="downloadable" value="true" label="Allow students to download this file" defaultChecked />
       </FieldSet>
 
-      {state?.ok === false && state.message && (
+      {state?.ok === false && state.error && (
         <div className="rounded-md bg-danger-50 p-4 text-sm text-danger-700">
-          {state.message}
+          {state.error}
         </div>
       )}
 
