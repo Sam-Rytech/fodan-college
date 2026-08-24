@@ -22,7 +22,7 @@ export default async function ForumPostPage({
   params: Promise<{ categorySlug: string; postId: string }>;
 }) {
   const { categorySlug, postId } = await params;
-  const user = await guardAuth();
+  const user = await guardUser();
 
   const category = await prisma.forumCategory.findUnique({
     where: { slug: categorySlug },
