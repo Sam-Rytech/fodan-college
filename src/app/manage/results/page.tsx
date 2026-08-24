@@ -6,7 +6,7 @@ import { guardStaff } from '@/lib/auth/guards';
 import { PERMISSIONS } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
 import { TableWrap, Table, Thead, Th, Tbody, Tr, Td, TableEmpty, Pagination } from '@/components/ui/table';
-import { formatDate, formatDateTime, formatDateTime } from '@/lib/utils';
+import { formatDate, formatDateTime } from '@/lib/utils';
 import { classScopeFilter, subjectScopeFilter } from '@/lib/auth/rbac';
 
 export const metadata: Metadata = { title: 'Results Analytics' };
