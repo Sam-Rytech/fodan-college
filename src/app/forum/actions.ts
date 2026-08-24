@@ -8,7 +8,7 @@ import { requireUser } from '@/lib/auth/guards';
 import { enforceRateLimit, RATE_LIMITS } from '@/lib/rate-limit';
 
 export async function createPostAction(
-  _previous: ActionResult<null> | null,
+  _previous: ActionResult<{ categorySlug: string; postId: string }> | null,
   formData: FormData,
 ): Promise<ActionResult<{ categorySlug: string; postId: string }>> {
   return runAction(async () => {
