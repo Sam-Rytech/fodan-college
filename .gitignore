@@ -50,3 +50,9 @@ coverage/
 # editors
 .vscode/
 .idea/
+
+# vercel cli (adds .vercel and .env* on `vercel link`)
+.vercel
+.env*
+# ...but the template carries no secrets and must stay in the repo.
+!.env.example
