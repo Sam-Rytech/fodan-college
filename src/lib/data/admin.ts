@@ -1,5 +1,5 @@
 import 'server-only';
-import { prisma } from '../db';
+import { prisma, containsInsensitive } from '../db';
 import { classScopeFilter } from '../auth/rbac';
 import { addDays, percentage } from '../utils';
 import {
@@ -296,9 +296,9 @@ export async function listStudents(user: AuthUser, query: StudentQuery) {
       ? {
         user: {
           OR: [
-            { fullName: { contains: query.search } },
-            { username: { contains: query.search } },
-            { email: { contains: query.search } },
+            { fullName: containsInsensitive(query.search) },
+            { username: containsInsensitive(query.search) },
+            { email: containsInsensitive(query.search) },
           ],
         },
       }

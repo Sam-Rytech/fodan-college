@@ -1,7 +1,7 @@
 import { type Metadata } from 'next';
 import Link from 'next/link';
 import { Plus, Search, FileText } from 'lucide-react';
-import { prisma } from '@/lib/db';
+import { prisma, containsInsensitive } from '@/lib/db';
 import { guardStaff, requirePermission } from '@/lib/auth/guards';
 
 import { PERMISSIONS } from '@/lib/constants';
@@ -22,7 +22,7 @@ export default async function ManageExamsPage({
   const search = typeof params.search === 'string' ? params.search : undefined;
 
   const exams = await prisma.examination.findMany({
-    where: search ? { title: { contains: search } } : undefined,
+    where: search ? { title: containsInsensitive(search) } : undefined,
     orderBy: { createdAt: 'desc' },
     include: {
       subject: true,

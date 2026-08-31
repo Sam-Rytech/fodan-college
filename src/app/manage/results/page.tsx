@@ -1,6 +1,6 @@
 import { type Metadata } from 'next';
 import { Search, TrendingUp, TrendingDown, Minus } from 'lucide-react';
-import { prisma } from '@/lib/db';
+import { prisma, containsInsensitive } from '@/lib/db';
 import { guardStaff, requirePermission } from '@/lib/auth/guards';
 
 import { PERMISSIONS } from '@/lib/constants';
@@ -40,8 +40,8 @@ export default async function ManageResultsPage({
     ...(search ? {
       student: {
         OR: [
-          { fullName: { contains: search } },
-          { username: { contains: search } }
+          { fullName: containsInsensitive(search) },
+          { username: containsInsensitive(search) }
         ]
       }
     } : {}),

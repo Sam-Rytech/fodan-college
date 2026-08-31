@@ -1,5 +1,5 @@
 import 'server-only';
-import { prisma } from './db';
+import { prisma, containsInsensitive } from './db';
 import { env } from './env';
 import { AUDIT_SEVERITY, type AuditAction, type AuditSeverity } from './constants';
 import { getRequestContext } from './auth/session';
@@ -155,9 +155,9 @@ export async function queryAuditLogs(query: AuditQuery) {
     ...(query.search
       ? {
           OR: [
-            { actorUsername: { contains: query.search } },
-            { description: { contains: query.search } },
-            { targetId: { contains: query.search } },
+            { actorUsername: containsInsensitive(query.search) },
+            { description: containsInsensitive(query.search) },
+            { targetId: containsInsensitive(query.search) },
           ],
         }
       : {}),

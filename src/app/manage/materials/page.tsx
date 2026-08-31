@@ -1,7 +1,7 @@
 import { type Metadata } from 'next';
 import Link from 'next/link';
 import { Plus, Search, FileVideo, FileText, FileAudio } from 'lucide-react';
-import { prisma } from '@/lib/db';
+import { prisma, containsInsensitive } from '@/lib/db';
 import { guardStaff, requirePermission } from '@/lib/auth/guards';
 
 import { PERMISSIONS } from '@/lib/constants';
@@ -35,7 +35,7 @@ export default async function ManageMaterialsPage({
     where: {
       ...classScope,
       ...subjectScope,
-      ...(search ? { title: { contains: search } } : {}),
+      ...(search ? { title: containsInsensitive(search) } : {}),
     },
     orderBy: { createdAt: 'desc' },
     include: {

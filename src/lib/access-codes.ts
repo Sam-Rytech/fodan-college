@@ -1,5 +1,5 @@
 import 'server-only';
-import { prisma } from './db';
+import { prisma, containsInsensitive } from './db';
 import { hmacToken, hmacTokenCandidates, randomHumanCode } from './crypto';
 import { AppError, notFound } from './errors';
 import { recordAudit } from './audit';
@@ -444,9 +444,9 @@ export async function listAccessCodes(query: CodeQuery) {
     ...(query.search
       ? {
           OR: [
-            { student: { fullName: { contains: query.search } } },
-            { student: { username: { contains: query.search } } },
-            { codeLast4: { contains: query.search.toUpperCase() } },
+            { student: { fullName: containsInsensitive(query.search) } },
+            { student: { username: containsInsensitive(query.search) } },
+            { codeLast4: containsInsensitive(query.search) },
           ],
         }
       : {}),
