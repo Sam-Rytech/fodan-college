@@ -15,7 +15,7 @@ export async function resolveReportAction(
 ): Promise<ActionResult<null>> {
   return runAction(async () => {
     const user = await guardStaff();
-    requirePermission(user, PERMISSIONS.MODERATE_FORUM);
+    requirePermission(user, PERMISSIONS.MANAGE_FORUM);
 
     const reportId = formData.get('reportId') as string;
     const action = formData.get('action') as 'ACTIONED' | 'DISMISSED';

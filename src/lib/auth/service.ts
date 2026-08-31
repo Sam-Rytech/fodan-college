@@ -276,7 +276,7 @@ export async function registerStudent(input: RegisterInput): Promise<string> {
     }
   }
 
-  const studentRole = await prisma.role.key.findUnique({ where: { key: ROLES.STUDENT } });
+  const studentRole = await prisma.role.findUnique({ where: { key: ROLES.STUDENT } });
   if (!studentRole) {
     throw new AppError('INTERNAL', 'The platform is not fully set up yet.', {
       internal: 'STUDENT role missing — run the seed script.',

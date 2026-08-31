@@ -23,7 +23,7 @@ export default async function ManageMaterialsPage({
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const user = await guardStaff();
-  requirePermission(user, PERMISSIONS.MANAGE_MATERIALS);
+  requirePermission(user, PERMISSIONS.UPLOAD_MATERIALS);
   
   const params = await searchParams;
   const search = typeof params.search === 'string' ? params.search : undefined;

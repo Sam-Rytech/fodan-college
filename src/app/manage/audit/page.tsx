@@ -95,7 +95,7 @@ export default async function AuditLogPage({
               data.entries.map((entry) => (
                 <Tr key={entry.id}>
                   <Td className="whitespace-nowrap text-sm text-[var(--text-muted)]">
-                    {formatDateTime()}
+                    {formatDateTime(entry.createdAt)}
                   </Td>
                   <Td className="font-medium text-[var(--text-strong)]">
                     <div className="flex items-center gap-2">
@@ -119,7 +119,7 @@ export default async function AuditLogPage({
                       <span className="text-[var(--text-muted)] italic">System</span>
                     )}
                   </Td>
-                  <Td className="max-w-xs truncate text-sm" title={entry.description}>
+                  <Td className="max-w-xs truncate text-sm" title={entry.description ?? undefined}>
                     {entry.description}
                   </Td>
                   <Td>

@@ -31,7 +31,7 @@ export function CommitForm({
     <form action={action} className="space-y-6">
       <input type="hidden" name="importId" value={importId} />
 
-      <FieldSet>
+      <FieldSet legend="Examination Details">
         <Field label="Examination Title" error={errors?.title} required>
           <Input name="title" placeholder="e.g. End of Term Mathematics" />
         </Field>

@@ -10,7 +10,7 @@ export const metadata: Metadata = { title: 'Upload Material' };
 
 export default async function UploadMaterialPage() {
   const user = await guardStaff();
-  requirePermission(user, PERMISSIONS.MANAGE_MATERIALS);
+  requirePermission(user, PERMISSIONS.UPLOAD_MATERIALS);
 
   const classScope = classScopeFilter(user);
   const subjectScope = subjectScopeFilter(user);

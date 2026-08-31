@@ -12,7 +12,7 @@ export const metadata: Metadata = { title: 'Forum Moderation' };
 
 export default async function ForumModerationPage() {
   const user = await guardStaff();
-  requirePermission(user, PERMISSIONS.MODERATE_FORUM);
+  requirePermission(user, PERMISSIONS.MANAGE_FORUM);
 
   // Get all open reports
   const reports = await prisma.forumReport.findMany({

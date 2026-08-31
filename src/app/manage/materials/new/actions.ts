@@ -17,7 +17,7 @@ export async function uploadMaterialAction(
 ): Promise<ActionResult<null>> {
   return runAction(async () => {
     const user = await guardStaff();
-    requirePermission(user, PERMISSIONS.MANAGE_MATERIALS);
+    requirePermission(user, PERMISSIONS.UPLOAD_MATERIALS);
 
     const input = parseForm(materialMetadataSchema, formData);
 

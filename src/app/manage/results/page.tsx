@@ -171,7 +171,7 @@ export default async function ManageResultsPage({
                     </span>
                   </Td>
                   <Td className="text-sm text-[var(--text-muted)]">
-                    {formatDateTime()}
+                    {formatDateTime(result.submittedAt)}
                   </Td>
                 </Tr>
               ))

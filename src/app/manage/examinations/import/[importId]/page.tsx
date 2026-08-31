@@ -113,7 +113,7 @@ export default async function ReviewImportPage({
 
             {hasErrors && (
               <div className="mt-6 pt-4 border-t border-[var(--line-soft)] flex justify-end">
-                <Button variant="outline" asChild>
+                <Button variant="secondary" asChild>
                   <Link href="/manage/examinations/import">Upload Corrected File</Link>
                 </Button>
               </div>
