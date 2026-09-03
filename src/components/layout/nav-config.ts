@@ -120,7 +120,7 @@ export const MANAGE_NAV: NavSection[] = [
         roles: [ROLES.SUPER_ADMIN],
       },
       {
-        href: '/manage/codes',
+        href: '/manage/access-codes',
         label: 'Access codes',
         icon: KeyRound,
         permissions: [PERMISSIONS.MANAGE_CODES],

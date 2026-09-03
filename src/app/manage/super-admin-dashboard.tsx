@@ -49,7 +49,7 @@ export function SuperAdminDashboard({
         actions={
           <>
             <Button asChild variant="secondary">
-              <Link href="/manage/codes">
+              <Link href="/manage/access-codes/generate">
                 <KeyRound className="size-4" aria-hidden />
                 Generate codes
               </Link>
