@@ -6,7 +6,7 @@ import { ROLES, AUDIT_SEVERITY } from '@/lib/constants';
 import { queryAuditLogs, listAuditActions } from '@/lib/audit';
 import { Button } from '@/components/ui/button';
 import { TableWrap, Table, Thead, Th, Tbody, Tr, Td, TableEmpty, Pagination } from '@/components/ui/table';
-import { formatDate, formatDateTime } from '@/lib/utils';
+import { formatDate, formatDateTime, safeJsonParse } from '@/lib/utils';
 
 export const metadata: Metadata = { title: 'Audit Trail' };
 
@@ -127,7 +127,7 @@ export default async function AuditLogPage({
                       <details className="text-xs">
                         <summary className="cursor-pointer text-brand-600 hover:underline focus:outline-none">View Details</summary>
                         <pre className="mt-2 max-w-xs overflow-x-auto whitespace-pre-wrap rounded bg-gray-100 p-2 text-[10px] leading-tight">
-                          {JSON.stringify(JSON.parse(entry.metadata), null, 2)}
+                          {JSON.stringify(safeJsonParse(entry.metadata, {}), null, 2)}
                         </pre>
                       </details>
                     ) : (

@@ -113,7 +113,12 @@ export async function notifyStaff(
 // -----------------------------------------------------------------------------
 
 export async function getUnreadCount(userId: string): Promise<number> {
-  return prisma.notification.count({ where: { userId, isRead: false } });
+  try {
+    return await prisma.notification.count({ where: { userId, isRead: false } });
+  } catch (error) {
+    console.error('[fodan][notifications] failed to read unread count', error);
+    return 0;
+  }
 }
 
 export async function listNotifications(
